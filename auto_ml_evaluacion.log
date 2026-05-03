@@ -1,0 +1,32 @@
+2026-05-03 14:51:55 [INFO] Conexión a base de datos establecida.
+2026-05-03 14:51:55 [INFO] Procesando archivo data/openml-cc18.txt (clasificacion)
+2026-05-03 14:51:55 [INFO] Iniciando task_id=3 (clasificacion)
+2026-05-03 14:51:55 [INFO] pickle write kr-vs-kp
+2026-05-03 14:51:55 [INFO] AutoKeras no disponible, se omite task 3
+2026-05-03 14:52:00 [INFO] Conexión a base de datos cerrada.
+2026-05-03 14:52:09 [INFO] Conexión a base de datos establecida.
+2026-05-03 14:52:09 [INFO] Procesando archivo data/openml-cc18.txt (clasificacion)
+2026-05-03 14:52:09 [INFO] Iniciando task_id=3 (clasificacion)
+2026-05-03 14:52:09 [INFO] pickle write kr-vs-kp
+2026-05-03 14:52:09 [INFO] AutoKeras no disponible, se omite task 3
+2026-05-03 14:52:22 [INFO] Conexión a base de datos cerrada.
+2026-05-03 15:11:38 [INFO] Conexión a base de datos establecida.
+2026-05-03 15:11:38 [INFO] Procesando archivo data/openml-cc18.txt (clasificacion)
+2026-05-03 15:11:38 [INFO] Iniciando task_id=3 (clasificacion)
+2026-05-03 15:11:38 [INFO] pickle write kr-vs-kp
+2026-05-03 15:14:15 [INFO] Assets written to: ./structured_data_classifier/best_model/assets
+2026-05-03 15:14:18 [INFO] Guardado OK: autokeras, task 3
+2026-05-03 15:16:02 [INFO] Iniciando task_id=6 (clasificacion)
+2026-05-03 15:16:02 [INFO] pickle write letter
+2026-05-03 15:25:12 [INFO] Assets written to: ./structured_data_classifier/best_model/assets
+2026-05-03 15:25:14 [INFO] Guardado OK: autokeras, task 6
+2026-05-03 15:25:53 [INFO] Procesando archivo data/openml-ctr23.txt (regresion)
+2026-05-03 15:25:53 [INFO] Iniciando task_id=361234 (regresion)
+2026-05-03 15:25:53 [INFO] pickle write abalone
+2026-05-03 15:28:04 [INFO] Assets written to: ./structured_data_regressor/best_model/assets
+2026-05-03 15:28:05 [INFO] Guardado OK: autokeras, task 361234
+2026-05-03 15:28:28 [INFO] Iniciando task_id=361235 (regresion)
+2026-05-03 15:28:28 [INFO] pickle write airfoil_self_noise
+2026-05-03 15:29:32 [INFO] Assets written to: ./structured_data_regressor/best_model/assets
+2026-05-03 15:29:33 [INFO] Guardado OK: autokeras, task 361235
+2026-05-03 15:29:36 [INFO] Conexión a base de datos cerrada.

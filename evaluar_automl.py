@@ -65,6 +65,14 @@ def obtener_conexion():
         logger.error(f"No se pudo conectar a PostgreSQL: {e}")
         raise
 
+def asegurar_conexion(conn):
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+    except:
+        conn = obtener_conexion()
+    return conn
+
 # ----------------------------------------------------------------------
 # Inserción de resultados
 INSERT_QUERY = sql.SQL("""
@@ -220,6 +228,21 @@ def calcular_metricas(tipo: str, y_true, y_pred):
         met["r2"] = float(r2_score(y_true, y_pred))
     return met
 
+def get_metricas_error():
+    """Retorna un diccionario de métricas con valor -1111 para indicar error."""
+    return {
+        "f1": -1111,
+        "accuracy": -1111,
+        "precision": -1111,
+        "recall": -1111,
+        "mae": -1111,
+        "mse": -1111,
+        "rmse": -1111,
+        "medae": -1111,
+        "ev": -1111,
+        "r2": -1111,
+    }
+
 # ----------------------------------------------------------------------
 # Procesamiento de un archivo
 def procesar_archivo(ruta: str, tipo: str, conn):
@@ -259,12 +282,29 @@ def procesar_archivo(ruta: str, tipo: str, conn):
                     **metricas,
                 }
                 try:
+                    conn = asegurar_conexion(conn)
                     guardar_resultado(conn, registro)
                     logger.info(f"Guardado OK: autokeras, task {task_id}")
                 except Exception as e:
                     logger.error(f"Error al insertar en DB (autokeras, task {task_id}): {e}")
             except Exception as e:
                 logger.error(f"Fallo en AutoKeras para task {task_id}: {e}\n{traceback.format_exc()}")
+                # Registrar en BD con métricas de error (-1111)
+                metricas_error = get_metricas_error()
+                registro_error = {
+                    "nombre_automl": "autokeras",
+                    "task_id": task_id,
+                    "nombre_dataset": nombre_dataset,
+                    "fuente": fuente,
+                    "tiempo": 0,  # Sin tiempo ya que falló
+                    **metricas_error,
+                }
+                try:
+                    conn = asegurar_conexion(conn)
+                    guardar_resultado(conn, registro_error)
+                    logger.info(f"Guardado REGISTRO DE ERROR: autokeras, task {task_id} con métricas=-1111")
+                except Exception as db_error:
+                    logger.error(f"Error al insertar registro de error en DB (autokeras, task {task_id}): {db_error}")
         else:
             logger.info(f"AutoKeras no disponible, se omite task {task_id}")
 

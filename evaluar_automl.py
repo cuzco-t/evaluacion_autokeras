@@ -1,3 +1,4 @@
+import gc
 import logging
 import os
 import time
@@ -235,6 +236,19 @@ def evaluar_autokeras(tipo, X_train, y_train, X_test, y_test, task_id):
                 shutil.rmtree(temp_dir)
             except Exception as e:
                 logger.warning(f"No se pudo eliminar carpeta temporal {temp_dir}: {e}")
+
+        try:
+            tf.keras.backend.clear_session()
+        except:
+            pass
+
+        # eliminar referencias grandes explícitamente
+        try:
+            del modelo
+        except:
+            pass
+
+        gc.collect()
 
 # ----------------------------------------------------------------------
 # Cálculo de métricas

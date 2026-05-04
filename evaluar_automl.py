@@ -2,6 +2,8 @@ import logging
 import os
 import time
 import traceback
+import tempfile
+import shutil
 from typing import Optional
 
 import numpy as np
@@ -25,6 +27,38 @@ from sklearn.model_selection import train_test_split
 from openml_descargador import OpenMLDescargador
 
 # ----------------------------------------------------------------------
+# Configuración de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("evaluacion")
+
+from dotenv import load_dotenv
+load_dotenv() 
+
+# ----------------------------------------------------------------------
+# Configuración de GPU y Keras - ANTES de importar AutoKeras
+import tensorflow as tf
+import os
+
+# Establecer backend de Keras a TensorFlow (importante para AutoKeras 3.0.0)
+os.environ['KERAS_BACKEND'] = 'tensorflow'
+
+# Configuración de GPU - Memory Growth
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        logger_temp = logging.getLogger("config_gpu")
+        logger_temp.info(f"GPU configurada. Dispositivos encontrados: {len(gpus)}")
+    except RuntimeError as e:
+        print(f"Error configurando GPU: {e}")
+else:
+    print("No se detectaron dispositivos GPU")
+
 # Importaciones opcionales de las herramientas AutoML
 try:
     import autokeras as ak
@@ -34,19 +68,6 @@ except ImportError as e:
     AUTOKERAS_DISPONIBLE = False
     print("AutoKeras no está instalado. Se omitirán sus ejecuciones.")
 
-# ----------------------------------------------------------------------
-# Configuración de logging
-logging.basicConfig(
-    filename="auto_ml_evaluacion.log",
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-logger = logging.getLogger("evaluacion")
-
-from dotenv import load_dotenv
-load_dotenv() 
-os.environ["TF_USE_LEGACY_KERAS"] = "1"
 # ----------------------------------------------------------------------
 # Conexión a PostgreSQL
 def obtener_conexion():
@@ -169,6 +190,7 @@ def _preparar_datos_para_autokeras(tipo, X_train, y_train, X_test, y_test):
     return X_train.to_numpy(), y_train.to_numpy(), X_test.to_numpy(), y_test.to_numpy(), False
 
 def evaluar_autokeras(tipo, X_train, y_train, X_test, y_test, task_id):
+    temp_dir = None
     try:
         X_tr, y_tr, X_te, y_te, omitir = _preparar_datos_para_autokeras(
             tipo, X_train, y_train, X_test, y_test
@@ -176,17 +198,20 @@ def evaluar_autokeras(tipo, X_train, y_train, X_test, y_test, task_id):
         if omitir:
             return None, 0.0
 
+        # Crear carpeta temporal para AutoKeras (se elimina automáticamente después)
+        temp_dir = tempfile.mkdtemp(prefix="autokeras_")
+
         if tipo == "clasificacion":
             modelo = ak.StructuredDataClassifier(
-                overwrite=True, directory=None, seed=42
+                overwrite=True, directory=temp_dir, seed=42, max_trials=30
             )
         else:
             modelo = ak.StructuredDataRegressor(
-                overwrite=True, directory=None, seed=42
+                overwrite=True, directory=temp_dir, seed=42, max_trials=30
             )
 
         inicio = time.perf_counter()
-        modelo.fit(X_tr, y_tr)
+        modelo.fit(X_tr, y_tr, epochs=50)
         y_pred = modelo.predict(X_te)
 
         tiempo = time.perf_counter() - inicio
@@ -203,6 +228,13 @@ def evaluar_autokeras(tipo, X_train, y_train, X_test, y_test, task_id):
     except Exception as e:
         logger.error(f"AutoKeras task {task_id}: {e}\n{traceback.format_exc()}")
         return None, 0.0
+    finally:
+        # Limpiar carpeta temporal
+        if temp_dir and os.path.exists(temp_dir):
+            try:
+                shutil.rmtree(temp_dir)
+            except Exception as e:
+                logger.warning(f"No se pudo eliminar carpeta temporal {temp_dir}: {e}")
 
 # ----------------------------------------------------------------------
 # Cálculo de métricas

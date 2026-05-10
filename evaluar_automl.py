@@ -204,15 +204,15 @@ def evaluar_autokeras(tipo, X_train, y_train, X_test, y_test, task_id):
 
         if tipo == "clasificacion":
             modelo = ak.StructuredDataClassifier(
-                overwrite=True, directory=temp_dir, seed=42, max_trials=30
+                overwrite=True, directory=temp_dir, seed=912, max_trials=15
             )
         else:
             modelo = ak.StructuredDataRegressor(
-                overwrite=True, directory=temp_dir, seed=42, max_trials=30
+                overwrite=True, directory=temp_dir, seed=912, max_trials=15
             )
 
         inicio = time.perf_counter()
-        modelo.fit(X_tr, y_tr, epochs=50)
+        modelo.fit(X_tr, y_tr, epochs=100)
         y_pred = modelo.predict(X_te)
 
         tiempo = time.perf_counter() - inicio
